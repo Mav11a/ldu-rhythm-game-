@@ -48,7 +48,7 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = JSON.parse(__firebase_config);
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
@@ -140,7 +140,6 @@
 
     <canvas id="rhythmCanvas" class="fixed inset-0 pointer-events-none z-0 opacity-35"></canvas>
 
-    <!-- Custom Toast Notification -->
     <div id="toast" class="fixed top-20 right-6 z-50 transform translate-x-[150%] transition-transform duration-300 bg-cyber-card border border-cyber-cyan text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center space-x-3.5 max-w-sm">
         <div class="w-9 h-9 rounded-xl bg-cyber-cyan/20 text-cyber-cyan flex items-center justify-center shrink-0">
             <i id="toast-icon" class="fa-solid fa-bolt text-lg"></i>
@@ -155,7 +154,6 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <a href="#" class="flex items-center space-x-3 group">
                 <div class="w-10 h-10 rounded-xl bg-slate-900 border border-cyber-cyan/60 flex items-center justify-center overflow-hidden shadow-lg group-hover:rotate-6 transition-transform p-1">
-                    <!-- Vector Logo Core based on user's logo design -->
                     <svg viewBox="0 0 100 100" class="w-full h-full text-cyber-cyan" fill="none" stroke="currentColor" stroke-width="4">
                         <circle cx="50" cy="50" r="42" stroke="rgba(5,217,232,0.4)" stroke-width="3"/>
                         <path d="M12 65 L28 65 L36 40 L44 75 L52 62 L88 62" stroke-linecap="round" stroke-linejoin="round"/>
@@ -180,7 +178,6 @@
                 <a href="#features" class="hover:text-cyber-cyan transition-colors">社群福利</a>
             </nav>
 
-            <!-- Quick Action Buttons -->
             <div class="flex items-center space-x-3">
                 <a href="https://b23.tv/BHHnrVG" target="_blank" class="bg-cyber-card hover:bg-slate-800 border border-pink-500/50 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-pink-400 flex items-center space-x-2 transition-all hover:scale-105 shadow-lg">
                     <i class="fa-brands fa-bilibili"></i>
@@ -201,7 +198,6 @@
 
     <section class="relative z-10 pt-14 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            <!-- Left Column: Hero Pitch -->
             <div class="lg:col-span-7 text-center lg:text-left">
                 <div class="inline-flex items-center space-x-2 bg-cyber-card border border-cyber-cyan/30 rounded-full px-4 py-1.5 mb-6 text-xs font-medium text-cyber-cyan animate-float">
                     <span class="w-2 h-2 rounded-full bg-cyber-cyan animate-ping"></span>
@@ -212,7 +208,7 @@
                     都有群友与你<span class="text-transparent bg-clip-text bg-gradient-to-r from-cyber-cyan via-cyber-pink to-cyber-yellow neon-text-cyan">共鸣 ALL PERFECT!</span>
                 </h1>
                 <p class="text-slate-400 text-base sm:text-lg mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                    不管是刚入坑还在苦练底力的萌新，还是追求理论值（MAX）的触手怪，欢迎来到鲁大音游人的温暖大本营！在这里晒出高光战绩、记录魔性群聊金句，随时寻找你的宿舍开黑与周末机厅出勤队友！
+                    不管是刚入坑还在苦练底力的萌新，还是追求理论值（MAX）的触手怪，欢迎来到鲁大音游人的温暖大本营！在这里晒出高光战绩、记录线下聚会合照，随时寻找你的宿舍开黑与周末机厅出勤队友！
                 </p>
 
                 <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4">
@@ -222,12 +218,11 @@
                     </a>
                     <a href="#highlights" class="bg-cyber-card hover:bg-slate-800 text-white font-bold px-6 py-4 rounded-2xl border border-slate-700 hover:border-cyber-pink transition-all flex items-center space-x-2 text-sm sm:text-base">
                         <i class="fa-solid fa-images text-cyber-pink"></i>
-                        <span>浏览线下合照 & 群友日常</span>
+                        <span>浏览团建风采 & 出勤日常</span>
                     </a>
                 </div>
             </div>
 
-            <!-- Right Column: Community Rhythm Nexus Showcase Card with Logo -->
             <div class="lg:col-span-5">
                 <div class="bg-gradient-to-b from-cyber-card to-cyber-panel rounded-3xl p-6 sm:p-7 cyber-border-cyan relative overflow-hidden">
                     <div class="absolute -right-12 -top-12 w-40 h-40 bg-cyber-cyan/15 rounded-full blur-2xl pointer-events-none"></div>
@@ -243,7 +238,6 @@
                         </span>
                     </div>
 
-                    <!-- Highlight Banner Info with Vector Logo Core -->
                     <div class="flex items-center space-x-4 mb-6">
                         <div class="w-16 h-16 rounded-2xl bg-slate-900 border-2 border-cyber-cyan flex items-center justify-center overflow-hidden shadow-lg shrink-0 p-2">
                             <svg viewBox="0 0 100 100" class="w-full h-full text-cyber-cyan" fill="none" stroke="currentColor" stroke-width="4">
@@ -296,7 +290,7 @@
                 <div>
                     <div class="inline-flex items-center space-x-2 text-xs font-mono-num font-bold tracking-widest text-cyber-cyan uppercase mb-2 px-1 rounded">
                         <i class="fa-solid fa-camera-retro"></i>
-                        <span>OFFLINE MEMORIES & COMMUNITY WALL</span>
+                        <span>TEAM BUILDING & COMMUNITY WALL</span>
                     </div>
                     <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight px-1 rounded">
                         团建风采 · 出勤日常与高光墙
@@ -570,7 +564,6 @@
         <p>© 2026 鲁东大学音乐游戏综合交流 · 官方B站: <a href="https://b23.tv/BHHnrVG" target="_blank" class="text-pink-400 hover:underline">b23.tv/BHHnrVG</a></p>
     </footer>
 
-    <!-- Post Modal -->
     <div id="postModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-4">
         <div class="bg-cyber-card border border-cyber-pink/60 rounded-3xl p-6 sm:p-8 max-w-lg w-full relative shadow-2xl">
             <button onclick="closePostModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white text-xl">
@@ -658,7 +651,6 @@
         </div>
     </div>
 
-    <!-- Lightbox Modal -->
     <div id="lightboxModal" onclick="closeLightbox()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md hidden p-4 cursor-zoom-out">
         <div class="max-w-4xl w-full bg-cyber-card border border-slate-700 rounded-3xl overflow-hidden shadow-2xl relative" onclick="event.stopPropagation()">
             <button onclick="closeLightbox()" class="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/70 hover:bg-cyber-pink text-white flex items-center justify-center text-lg transition-colors">
@@ -824,7 +816,7 @@
                     <div class="col-span-full bg-cyber-card border border-slate-800 rounded-3xl p-12 text-center">
                         <i class="fa-solid fa-compact-disc text-4xl text-cyber-cyan mb-3 animate-spin"></i>
                         <h4 class="text-lg font-bold text-white">该分区暂时还没有动态哦</h4>
-                        <p class="text-xs text-slate-400 mt-1 mb-5">快来抢占沙发，发布第一条高光战绩或金句吧！</p>
+                        <p class="text-xs text-slate-400 mt-1 mb-5">快来抢占沙发，发布第一条高光战绩或日常吧！</p>
                         <button onclick="openPostModal()" class="bg-cyber-cyan text-black font-extrabold px-5 py-2.5 rounded-xl text-xs">立即发布</button>
                     </div>
                 `;
@@ -833,7 +825,7 @@
 
             grid.innerHTML = filtered.map((item) => {
                 const initial = (item.author || '音').charAt(0).toUpperCase();
-                const badgeClass = getBadgeStyle(item.badge || '神仙金句');
+                const badgeClass = getBadgeStyle(item.badge || '个人高光');
                 const likesCount = Number(item.likes || 0);
                 const isLiked = likedPostIds.has(item.id);
                 const isOwner = window.currentUser && item.uid === window.currentUser.uid;
@@ -849,7 +841,7 @@
                                 <span>${escapeHtml(item.game || '全能音游')}</span>
                             </span>
                             <span class="px-2.5 py-0.5 rounded-md text-[10px] font-mono-num font-black tracking-wider uppercase shadow-sm ${badgeClass}">
-                                ${escapeHtml(item.badge || '神仙金句')}
+                                ${escapeHtml(item.badge || '个人高光')}
                             </span>
                         </div>
 
