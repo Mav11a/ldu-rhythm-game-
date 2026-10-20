@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>鲁东大学音乐游戏综合交流</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            pink: '#ff2a85',
+                            cyan: '#05d9e8',
+                            yellow: '#ffe600',
+                            purple: '#9d4edd',
+                            dark: '#07080d',
+                            panel: '#111420',
+                            card: '#181c2e'
+                        }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 3.5s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate'
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-8px)' },
+                        },
+                        glow: {
+                            'from': { boxShadow: '0 0 10px rgba(5, 217, 232, 0.3)' },
+                            'to': { boxShadow: '0 0 25px rgba(255, 42, 133, 0.6)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'rhythm-nexus-app';
+
+        window.fb = { db, auth, appId, collection, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query };
+
+        async function initAuthAndData() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Auth initialization error:", err);
+            }
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) return;
+            window.currentUser = user;
+            if (window.onUserReady) {
+                window.onUserReady(user);
+            }
+        });
+
+        initAuthAndData();
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background-color: #07080d;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        .font-mono-num {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .neon-text-cyan {
+            text-shadow: 0 0 12px rgba(5, 217, 232, 0.75);
+        }
+        .neon-text-pink {
+            text-shadow: 0 0 12px rgba(255, 42, 133, 0.75);
+        }
+        .cyber-border-cyan {
+            border: 1px solid rgba(5, 217, 232, 0.4);
+            box-shadow: 0 0 20px rgba(5, 217, 232, 0.15), inset 0 0 15px rgba(5, 217, 232, 0.05);
+        }
+        .cyber-border-pink {
+            border: 1px solid rgba(255, 42, 133, 0.4);
+            box-shadow: 0 0 20px rgba(255, 42, 133, 0.15), inset 0 0 15px rgba(255, 42, 133, 0.05);
+        }
+        .badge-max {
+            background: linear-gradient(135deg, #05d9e8 0%, #9d4edd 50%, #ff2a85 100%);
+            color: #ffffff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+        }
+        .badge-ap {
+            background: linear-gradient(135deg, #ffe600 0%, #ff9900 100%);
+            color: #000000;
+        }
+        .badge-fc {
+            background: linear-gradient(135deg, #05d9e8 0%, #0077ff 100%);
+            color: #000000;
+        }
+        .badge-quote {
+            background: linear-gradient(135deg, #ff2a85 0%, #9d4edd 100%);
+            color: #ffffff;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #07080d;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #05d9e8;
+        }
+    </style>
+</head>
+<body class="bg-cyber-dark text-slate-200 antialiased selection:bg-cyber-cyan selection:text-black">
+
+    <canvas id="rhythmCanvas" class="fixed inset-0 pointer-events-none z-0 opacity-35"></canvas>
+
+    <!-- Custom Toast Notification -->
+    <div id="toast" class="fixed top-20 right-6 z-50 transform translate-x-[150%] transition-transform duration-300 bg-cyber-card border border-cyber-cyan text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center space-x-3.5 max-w-sm">
+        <div class="w-9 h-9 rounded-xl bg-cyber-cyan/20 text-cyber-cyan flex items-center justify-center shrink-0">
+            <i id="toast-icon" class="fa-solid fa-bolt text-lg"></i>
+        </div>
+        <div>
+            <h4 class="font-bold text-sm text-white" id="toast-title">系统提示</h4>
+            <p class="text-xs text-slate-300 mt-0.5" id="toast-msg">操作成功</p>
+        </div>
+    </div>
+
+    <header class="sticky top-0 z-40 backdrop-blur-xl bg-cyber-dark/85 border-b border-slate-800/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <a href="#" class="flex items-center space-x-3 group">
+                <div class="w-10 h-10 rounded-xl bg-slate-900 border border-cyber-cyan/60 flex items-center justify-center overflow-hidden shadow-lg group-hover:rotate-6 transition-transform p-1">
+                    <!-- Vector Logo Core based on user's logo design -->
+                    <svg viewBox="0 0 100 100" class="w-full h-full text-cyber-cyan" fill="none" stroke="currentColor" stroke-width="4">
+                        <circle cx="50" cy="50" r="42" stroke="rgba(5,217,232,0.4)" stroke-width="3"/>
+                        <path d="M12 65 L28 65 L36 40 L44 75 L52 62 L88 62" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="34" y="32" width="14" height="8" rx="2" fill="#05d9e8" stroke="none"/>
+                        <polygon points="56,22 64,36 48,36" fill="#ff2a85" stroke="none"/>
+                        <circle cx="70" cy="48" r="5" fill="#ffe600" stroke="none"/>
+                    </svg>
+                </div>
+                <div>
+                    <span class="font-black text-base sm:text-lg tracking-wider text-white block leading-none">
+                        鲁东大学<span class="text-cyber-cyan">音乐游戏综合交流</span>
+                    </span>
+                    <span class="text-[10px] font-mono-num text-slate-400 tracking-widest">LDU RHYTHM GAME COMMUNITY</span>
+                </div>
+            </a>
+
+            <nav class="hidden md:flex items-center space-x-7 text-sm font-medium text-slate-300">
+                <a href="#highlights" class="hover:text-cyber-cyan transition-colors flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyber-pink"></span>团建风采 & 高光墙
+                </a>
+                <a href="#games" class="hover:text-cyber-cyan transition-colors">常驻音游</a>
+                <a href="#features" class="hover:text-cyber-cyan transition-colors">社群福利</a>
+            </nav>
+
+            <!-- Quick Action Buttons -->
+            <div class="flex items-center space-x-3">
+                <a href="https://b23.tv/BHHnrVG" target="_blank" class="bg-cyber-card hover:bg-slate-800 border border-pink-500/50 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-pink-400 flex items-center space-x-2 transition-all hover:scale-105 shadow-lg">
+                    <i class="fa-brands fa-bilibili"></i>
+                    <span>官方B站</span>
+                </a>
+
+                <button onclick="openPostModal()" class="bg-cyber-card hover:bg-slate-800 border border-cyber-cyan/50 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-cyber-cyan hidden sm:flex items-center space-x-2 transition-all hover:scale-105 shadow-lg">
+                    <i class="fa-solid fa-camera-retro"></i>
+                    <span>晒日常</span>
+                </button>
+
+                <a href="#join" class="inline-flex items-center bg-gradient-to-r from-cyber-pink to-cyber-purple hover:from-cyber-purple hover:to-cyber-pink text-white font-extrabold px-4 py-2 rounded-xl text-xs sm:text-sm shadow-lg transition-all transform hover:scale-105">
+                    加群 <i class="fa-solid fa-angles-right ml-1.5"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <section class="relative z-10 pt-14 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            <!-- Left Column: Hero Pitch -->
+            <div class="lg:col-span-7 text-center lg:text-left">
+                <div class="inline-flex items-center space-x-2 bg-cyber-card border border-cyber-cyan/30 rounded-full px-4 py-1.5 mb-6 text-xs font-medium text-cyber-cyan animate-float">
+                    <span class="w-2 h-2 rounded-full bg-cyber-cyan animate-ping"></span>
+                    <span>SYNC RATE 100% · 鲁东大学音乐游戏综合交流集结地</span>
+                </div>
+                <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-white mb-6 leading-[1.15]">
+                    每一次指尖跃动，<br>
+                    都有群友与你<span class="text-transparent bg-clip-text bg-gradient-to-r from-cyber-cyan via-cyber-pink to-cyber-yellow neon-text-cyan">共鸣 ALL PERFECT!</span>
+                </h1>
+                <p class="text-slate-400 text-base sm:text-lg mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                    不管是刚入坑还在苦练底力的萌新，还是追求理论值（MAX）的触手怪，欢迎来到鲁大音游人的温暖大本营！在这里晒出高光战绩、记录魔性群聊金句，随时寻找你的宿舍开黑与周末机厅出勤队友！
+                </p>
+
+                <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4">
+                    <a href="#join" class="bg-cyber-cyan hover:bg-cyan-300 text-black font-black px-7 py-4 rounded-2xl shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center space-x-2 text-sm sm:text-base">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>一键加入鲁大音游群</span>
+                    </a>
+                    <a href="#highlights" class="bg-cyber-card hover:bg-slate-800 text-white font-bold px-6 py-4 rounded-2xl border border-slate-700 hover:border-cyber-pink transition-all flex items-center space-x-2 text-sm sm:text-base">
+                        <i class="fa-solid fa-images text-cyber-pink"></i>
+                        <span>浏览线下合照 & 群友日常</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Right Column: Community Rhythm Nexus Showcase Card with Logo -->
+            <div class="lg:col-span-5">
+                <div class="bg-gradient-to-b from-cyber-card to-cyber-panel rounded-3xl p-6 sm:p-7 cyber-border-cyan relative overflow-hidden">
+                    <div class="absolute -right-12 -top-12 w-40 h-40 bg-cyber-cyan/15 rounded-full blur-2xl pointer-events-none"></div>
+                    <div class="absolute -left-12 -bottom-12 w-40 h-40 bg-cyber-pink/15 rounded-full blur-2xl pointer-events-none"></div>
+
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-5">
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2.5 py-0.5 rounded-md bg-cyber-cyan/20 text-cyber-cyan font-mono-num text-xs font-bold">LDU RHYTHM HUB</span>
+                            <span class="text-xs text-slate-400">群内日常实时看板</span>
+                        </div>
+                        <span class="inline-flex items-center text-xs text-emerald-400 font-mono-num">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>ACTIVE
+                        </span>
+                    </div>
+
+                    <!-- Highlight Banner Info with Vector Logo Core -->
+                    <div class="flex items-center space-x-4 mb-6">
+                        <div class="w-16 h-16 rounded-2xl bg-slate-900 border-2 border-cyber-cyan flex items-center justify-center overflow-hidden shadow-lg shrink-0 p-2">
+                            <svg viewBox="0 0 100 100" class="w-full h-full text-cyber-cyan" fill="none" stroke="currentColor" stroke-width="4">
+                                <circle cx="50" cy="50" r="42" stroke="rgba(5,217,232,0.5)" stroke-width="3"/>
+                                <path d="M12 65 L28 65 L36 40 L44 75 L52 62 L88 62" stroke-linecap="round" stroke-linejoin="round"/>
+                                <rect x="34" y="32" width="14" height="8" rx="2" fill="#05d9e8" stroke="none"/>
+                                <polygon points="56,22 64,36 48,36" fill="#ff2a85" stroke="none"/>
+                                <circle cx="70" cy="48" r="5" fill="#ffe600" stroke="none"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center space-x-2">
+                                <h3 class="text-xl font-black text-white truncate">鲁大音游同好集结中</h3>
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-cyber-pink/20 text-cyber-pink border border-cyber-pink/40 shrink-0">随时发车</span>
+                            </div>
+                            <p class="text-xs text-slate-400 truncate mt-1">官方交流群：<strong class="text-cyber-cyan font-mono-num">676751412</strong></p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mb-6">
+                        <div class="bg-cyber-dark/80 border border-slate-800/90 rounded-2xl p-3.5">
+                            <div class="text-[11px] text-slate-400 mb-1">官方B站动态</div>
+                            <a href="https://b23.tv/BHHnrVG" target="_blank" class="text-sm font-extrabold text-pink-400 hover:underline truncate flex items-center gap-1.5">
+                                <i class="fa-brands fa-bilibili"></i> 点击前往B站主页
+                            </a>
+                        </div>
+                        <div class="bg-cyber-dark/80 border border-slate-800/90 rounded-2xl p-3.5">
+                            <div class="text-[11px] text-slate-400 mb-1">官方交流群号</div>
+                            <div class="text-sm font-extrabold font-mono-num text-cyber-cyan truncate">676751412</div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button onclick="copyGroupCode('676751412')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-xs sm:text-sm transition-colors flex items-center justify-center gap-2 border border-slate-700">
+                            <i class="fa-solid fa-copy text-cyber-cyan"></i> 复制官方群号
+                        </button>
+                        <button onclick="openPostModal()" class="flex-1 bg-gradient-to-r from-cyber-cyan to-blue-500 hover:opacity-95 text-black font-extrabold py-3 rounded-xl text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-lg">
+                            <i class="fa-solid fa-plus"></i> 发布高光日常
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="highlights" class="py-20 bg-cyber-panel/90 border-y border-slate-800/90 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div class="flex flex-col lg:flex-row lg:items-end justify-between mb-10 gap-6">
+                <div>
+                    <div class="inline-flex items-center space-x-2 text-xs font-mono-num font-bold tracking-widest text-cyber-cyan uppercase mb-2 px-1 rounded">
+                        <i class="fa-solid fa-camera-retro"></i>
+                        <span>OFFLINE MEMORIES & COMMUNITY WALL</span>
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight px-1 rounded">
+                        团建风采 · 出勤日常与高光墙
+                    </h2>
+                    <p class="text-slate-400 mt-2 text-sm sm:text-base px-1 rounded">
+                        从烟台机厅组团出勤、社团团建到精彩瞬间，记录鲁大音游人的每一份快乐日常！
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <button onclick="openPostModal()" class="bg-gradient-to-r from-cyber-pink to-cyber-purple hover:from-cyber-purple hover:to-cyber-pink text-white font-extrabold px-6 py-3.5 rounded-2xl shadow-xl transition-all transform hover:scale-105 flex items-center space-x-2 text-xs sm:text-sm">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>晒出勤日常 / 发布高光</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bento Photo Showcase -->
+            <div class="mb-12">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-cyber-pink animate-ping"></span>
+                        <h3 class="text-base sm:text-lg font-black text-white">📸 鲁大音游人 · 团建风采与出勤精选</h3>
+                    </div>
+                    <span class="text-xs text-slate-400">点击任意照片可放大预览</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    <div onclick="openLightbox('https://images.unsplash.com/photo-1511882150382-421056c89033?auto=format&fit=crop&w=1200&q=80', '鲁大音游群 · 团建风采大合照', '2026 烟台大悦城/万达机厅联合出勤 · 40+群友线下集结面基！')" class="md:col-span-7 group relative rounded-3xl overflow-hidden border border-slate-800 hover:border-cyber-cyan transition-all cursor-pointer h-72 sm:h-96 shadow-2xl">
+                        <img src="https://images.unsplash.com/photo-1511882150382-421056c89033?auto=format&fit=crop&w=1200&q=80" onerror="this.src='https://placehold.co/800x500/111420/05d9e8?text=LDU+Team+Building'" alt="团建风采大合照" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                        <div class="absolute top-4 left-4 flex items-center gap-2">
+                            <span class="px-3 py-1 rounded-full bg-cyber-pink text-white text-xs font-black shadow-lg">🔥 团建风采</span>
+                            <span class="px-3 py-1 rounded-full bg-black/70 backdrop-blur-md text-cyber-cyan font-mono-num text-xs font-bold border border-cyber-cyan/30">线下聚会大合照</span>
+                        </div>
+                        <div class="absolute bottom-5 left-5 right-5">
+                            <h4 class="text-xl sm:text-2xl font-black text-white mb-1 group-hover:text-cyber-cyan transition-colors">鲁大音游群 · 团建风采大合照与聚会</h4>
+                            <p class="text-xs sm:text-sm text-slate-300 line-clamp-2">舞萌DX、中二节奏排卡全员鲁大群友！打完机厅一起去吃夜宵烤肉，快乐直接拉满！</p>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div onclick="openLightbox('https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80', '出勤日常 · 移动端平板联机狂欢', '十几个平板摆一排同时打 Arcaea 和 Phigros，场面堪比音游展现场！')" class="group relative rounded-3xl overflow-hidden border border-slate-800 hover:border-cyber-pink transition-all cursor-pointer h-44 sm:h-[184px] shadow-xl">
+                            <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80" onerror="this.src='https://placehold.co/600x400/181c2e/ff2a85?text=Arcade+Daily'" alt="出勤日常" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                            <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-md bg-cyber-cyan/90 text-black text-[10px] font-black">出勤日常</span>
+                            <div class="absolute bottom-3.5 left-3.5 right-3.5">
+                                <h5 class="text-sm font-black text-white truncate">机厅出勤日常 · 联机切磋</h5>
+                                <p class="text-[11px] text-slate-300 truncate">十几个平板同屏打歌的震撼现场</p>
+                            </div>
+                        </div>
+
+                        <div onclick="openLightbox('https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80', '团建风采 · 鲁大魔王杯线下赛', '大佬神仙打架，围观群友疯狂打Call，还有超多音游周边奖品放送！')" class="group relative rounded-3xl overflow-hidden border border-slate-800 hover:border-cyber-yellow transition-all cursor-pointer h-44 sm:h-[184px] shadow-xl">
+                            <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80" onerror="this.src='https://placehold.co/600x400/181c2e/ffe600?text=Team+Tournament'" alt="团建风采水友赛" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                            <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-md bg-cyber-yellow text-black text-[10px] font-black">团建风采</span>
+                            <div class="absolute bottom-3.5 left-3.5 right-3.5">
+                                <h5 class="text-sm font-black text-white truncate">团建风采 · 线下水友赛现场</h5>
+                                <p class="text-[11px] text-slate-300 truncate">神仙打架现场 & 奖品周边派送</p>
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-2 group relative rounded-3xl overflow-hidden border border-slate-800 hover:border-cyber-cyan transition-all cursor-pointer h-44 sm:h-[184px] shadow-xl" onclick="openLightbox('https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=900&q=80', '团建风采 · 聚餐干饭团建', '打完机厅怎么能少得了干饭！一群人边吃烤肉边聊谱面，氛围感满分！')">
+                            <img src="https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=900&q=80" onerror="this.src='https://placehold.co/800x350/181c2e/05d9e8?text=Team+Dinner'" alt="聚餐团建" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                            <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-md bg-cyber-purple text-white text-[10px] font-black">团建风采</span>
+                            <div class="absolute bottom-3.5 left-4 right-4">
+                                <h5 class="text-sm sm:text-base font-black text-white truncate">团建风采 · 打完歌后的深夜食堂聚餐</h5>
+                                <p class="text-xs text-slate-300 truncate">机厅消耗完体力，一起去吃顿热腾腾的火锅烤肉！</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-8 pb-4 border-b border-slate-800">
+                <div class="flex flex-wrap items-center gap-2" id="filter-tabs">
+                    <button onclick="setHighlightFilter('ALL')" data-filter="ALL" class="filter-btn active-filter px-4 py-2 rounded-xl text-xs font-extrabold transition-all bg-cyber-cyan text-black shadow-md">
+                        全部动态
+                    </button>
+                    <button onclick="setHighlightFilter('团建风采')" data-filter="团建风采" class="filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-cyber-card text-slate-300 hover:text-white border border-slate-800">
+                        🎊 团建风采
+                    </button>
+                    <button onclick="setHighlightFilter('出勤日常')" data-filter="出勤日常" class="filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-cyber-card text-slate-300 hover:text-white border border-slate-800">
+                        📸 出勤日常
+                    </button>
+                    <button onclick="setHighlightFilter('个人高光成绩')" data-filter="个人高光成绩" class="filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-cyber-card text-slate-300 hover:text-white border border-slate-800">
+                        🏆 个人高光成绩
+                    </button>
+                    <button onclick="setHighlightFilter('萌新求带')" data-filter="萌新求带" class="filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-cyber-card text-slate-300 hover:text-white border border-slate-800">
+                        🤝 扩列 / 萌新求带
+                    </button>
+                </div>
+
+                <div class="text-xs text-slate-400 font-mono-num flex items-center gap-2">
+                    <i class="fa-solid fa-cloud text-cyber-cyan"></i>
+                    <span>云端实时同步中</span>
+                </div>
+            </div>
+
+            <div id="highlights-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamically populated -->
+            </div>
+
+        </div>
+    </section>
+
+    <section id="games" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center mb-14">
+            <span class="text-xs font-mono-num font-bold tracking-widest text-cyber-pink uppercase">SUPPORTED RHYTHM GAMES</span>
+            <h2 class="text-3xl sm:text-4xl font-black text-white mt-2">全栖音游阵地 · 三大平台全覆盖</h2>
+            <p class="text-slate-400 mt-2 text-sm">群内设有移动端、PC端、街机端专属讨论与约玩分区，随时随地找到同好</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-cyber-card border border-slate-800 hover:border-cyber-cyan rounded-3xl p-7 transition-all group flex flex-col justify-between relative overflow-hidden shadow-xl">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-cyber-cyan/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div>
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="w-14 h-14 rounded-2xl bg-cyber-cyan/15 text-cyber-cyan flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-mobile-screen-button"></i>
+                        </div>
+                        <span class="text-xs font-mono-num font-bold px-3 py-1 rounded-full bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30">MOBILE · 移动端</span>
+                    </div>
+                    <h3 class="text-2xl font-black text-white mb-3">移动端音游</h3>
+                    <p class="text-slate-400 text-xs sm:text-sm leading-relaxed mb-5">
+                        指尖与屏幕的极限碰撞！无论是三维立体轨、无轨判定线还是多轨下落，群内常驻多位红框、双星PTT与16+金RKS大佬，提供拆谱慢放与多指手法指导。
+                    </p>
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <span class="px-2.5 py-1 rounded-lg bg-cyber-dark border border-slate-700/80 text-xs font-bold text-cyber-cyan">Arcaea</span>
+                        <span class="px-2.5 py-1 rounded-lg bg-cyber-dark border border-slate-700/80 text-xs font-bold text-slate-300">Phigros</span>
+                        <span class="px-2.5 py-1 rounded-lg bg-cyber-dark border border-slate-700/80 text-xs font-bold text-slate-300">世界计划 PJSK</span>
+                        <span class="px-2.5 py-1 rounded-lg bg-cyber-dark border border-slate-700/80 text-xs font-bold text-slate-300">Cytus II</span>
+                        <span class="px-2.5 py-1 rounded-lg bg-cyber-dark border border-slate-700/80 text-xs font-bold text-slate-300">Rizline</span>
+                        <span class="px-2.5 py-1 rounded-lg bg-cyber-dark border border-slate-700/80 text-xs font-bold text-slate-300">Orzmic / Milthm</span>
+                    </div>
+                </div>
+                <div class="pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                    <span>宿舍开黑 / 协力发车</span>
+                    <span class="text-cyber-cyan font-mono-num font-bold">★★★★★ 极高热度</span>
+                </div>
+            </div>
+
+            <div class="bg-cyber-card border border-slate-800 hover:border-cyber-pink rounded-3xl p-7 transition-all group flex flex-col justify-between relative overflow-hidden shadow-xl">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-cyber-pink/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div>
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="w-14 h-14 rounded-2xl bg-cyber-pink/15 text-cyber-pink flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-desktop"></i>
+                        </div>
+                        <span class="text-xs font-mono-num font-bold px-3 py-1 rounded-full bg-cyber-pink/10 text-cyber-pink border border-cyber-pink/30">DESKTOP · PC端</span>
+                    </div>
+                    <h3 class="text-2xl font-black text-white mb-3">PC端音游</h3>
+                    <p class="text-slate-400 text-xs sm:text-sm leading-relaxed mb-5">
+                        机械键盘与数位板的狂欢！涵盖传统4K/7K多轨下落式、戳泡泡、双键跑酷与单键节奏神作，群内不仅常开多人联机房，还有磁轴键盘与外设调校避坑指南。
+                    </p>
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <span class="px-2.5 py-1 rounded-lg bg-cyber-dark border border-slate-700/80 text-xs font-bold text-cyber-pink">osu! (全模式)</span>
+                        <span class="px-2.5 py-1 rounded-lg bg-cyber-dark border border-slate-700/80 text-xs font-bold text-slate-300">DJMAX Respect V</span>
+                        <span class="px-2.5 py-1 rounded-lg bg-cyber-dark border border-slate-700/80 text-xs font-bold text-slate-300">Muse Dash</span>
+                        <span class="px-2.5 py-1 rounded-lg bg-cyber-dark border border-slate-700/80 text-xs font-bold text-slate-300">冰与火之舞 ADOFAI</span>
+                        <span class="px-2.5 py-1 rounded-lg bg-cyber-dark border border-slate-700/80 text-xs font-bold text-slate-300">Malody / Quaver</span>
+                    </div>
+                </div>
+                <div class="pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                    <span>MP联机房 / 键鼠外设交流</span>
+                    <span class="text-cyber-pink font-mono-num font-bold">★★★★★ 极高热度</span>
+                </div>
+            </div>
+
+            <div class="bg-cyber-card border border-slate-800 hover:border-cyber-yellow rounded-3xl p-7 transition-all group flex flex-col justify-between relative overflow-hidden shadow-xl">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-cyber-yellow/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div>
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="w-14 h-14 rounded-2xl bg-cyber-yellow/15 text-cyber-yellow flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-gamepad"></i>
+                        </div>
+                        <span class="text-xs font-mono-num font-bold px-3 py-1 rounded-full bg-cyber-yellow/10 text-cyber-yellow border border-cyber-yellow/30">ARCADE · 街机端</span>
+                    </div>
+                    <h3 class="text-2xl font-black text-white mb-3">街机端音游</h3>
+                    <p class="text-slate-400 text-xs sm:text-sm leading-relaxed mb-5">
+                        烟台及周边机厅出勤不孤单！从鲁大出发结伴拼机，无论是洗衣机拍键绝赞、中二抬手空气擦，还是鼓棒与手台，万四万五及虹R大佬带你愉快出勤！
+                    </p>
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <span class="px-2.5 py-1 rounded-lg bg-cyber-dark border border-slate-700/80 text-xs font-bold text-cyber-yellow">舞萌 Maimai DX</span>
+                        <span class="px-2.5 py-1 rounded-lg bg-cyber-dark border border-slate-700/80 text-xs font-bold text-slate-300">中二节奏 Chunithm</span>
+                        <span class="px-2.5 py-1 rounded-lg bg-cyber-dark border border-slate-700/80 text-xs font-bold text-slate-300">太鼓之达人</span>
+                        <span class="px-2.5 py-1 rounded-lg bg-cyber-dark border border-slate-700/80 text-xs font-bold text-slate-300">SDVX / IIDX</span>
+                        <span class="px-2.5 py-1 rounded-lg bg-cyber-dark border border-slate-700/80 text-xs font-bold text-slate-300">舞立方 / E舞</span>
+                    </div>
+                </div>
+                <div class="pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                    <span>机厅排卡 / 周末结伴出勤</span>
+                    <span class="text-cyber-yellow font-mono-num font-bold">★★★★★ 极高热度</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="py-16 bg-cyber-panel/60 border-t border-slate-800/80 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <span class="text-xs font-mono-num font-bold tracking-widest text-cyber-cyan uppercase">WHY JOIN US</span>
+                <h3 class="text-3xl sm:text-4xl font-black text-white mt-2">加入我们，你将获得什么？</h3>
+                <p class="text-slate-400 mt-2 text-sm">鲁大音游人的温暖大本营，无论新老玩家都能找到乐趣</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="flex flex-col justify-between bg-cyber-card p-6 rounded-3xl border border-slate-800 hover:border-cyber-cyan/50 transition-all">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-cyber-cyan/15 text-cyber-cyan flex items-center justify-center text-xl mb-5">
+                            <i class="fa-solid fa-trophy"></i>
+                        </div>
+                        <h4 class="text-lg font-black text-white mb-2">每学期的趣味水友赛</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">分为萌新娱乐组与魔王觉醒组，不用担心被大触碾压！参与即可抽取曲包基金、周边立牌与专属闪亮群头衔。</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-col justify-between bg-cyber-card p-6 rounded-3xl border border-slate-800 hover:border-cyber-pink/50 transition-all">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-cyber-pink/15 text-cyber-pink flex items-center justify-center text-xl mb-5">
+                            <i class="fa-solid fa-hand-sparkles"></i>
+                        </div>
+                        <h4 class="text-lg font-black text-white mb-2">零门槛拆谱教学与外设避坑指南</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">买什么平板不断触？指套选哪家？哪首曲子最适合练习交互与纵连？群文件海量干货与大佬在线解答。</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-col justify-between bg-cyber-card p-6 rounded-3xl border border-slate-800 hover:border-cyber-yellow/50 transition-all">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-cyber-yellow/15 text-cyber-yellow flex items-center justify-center text-xl mb-5">
+                            <i class="fa-solid fa-shield-heart"></i>
+                        </div>
+                        <h4 class="text-lg font-black text-white mb-2">零戾气、拒绝优越感的纯净氛围</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">管理员24小时在线护航，严禁出警、严禁晒分嘲讽。哪怕你刚打出人生第一个 Easy Full Combo，群友也会排起队形为你刷666！</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="join" class="py-20 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="bg-gradient-to-r from-cyber-card via-[#1e1b38] to-cyber-card rounded-3xl p-8 sm:p-12 cyber-border-pink text-center relative overflow-hidden">
+            <h2 class="text-3xl sm:text-5xl font-black text-white mb-4">
+                准备好上车，开启你的<span class="text-cyber-cyan neon-text-cyan">全连之旅</span>了吗？
+            </h2>
+            <p class="text-slate-300 text-sm sm:text-base max-w-xl mx-auto mb-8">
+                点击下方按钮一键复制群号，或关注我们的官方B站账号获取最新视频与活动资讯！
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button onclick="copyGroupCode('676751412')" class="w-full sm:w-auto bg-cyber-cyan hover:bg-cyan-300 text-black font-black px-8 py-4 rounded-2xl shadow-xl transition-all transform hover:scale-105 flex items-center justify-center space-x-2.5 text-sm sm:text-base">
+                    <i class="fa-solid fa-copy"></i>
+                    <span>复制官方QQ群号：676751412</span>
+                </button>
+                <a href="https://b23.tv/BHHnrVG" target="_blank" class="w-full sm:w-auto bg-cyber-card hover:bg-slate-800 text-pink-400 font-bold px-8 py-4 rounded-2xl border border-pink-500/50 transition-all flex items-center justify-center space-x-2.5 text-sm sm:text-base shadow-lg">
+                    <i class="fa-brands fa-bilibili"></i>
+                    <span>访问官方B站账号</span>
+                </a>
+            </div>
+
+            <div class="mt-6 inline-flex items-center space-x-2 text-xs text-slate-400 bg-cyber-dark/70 px-4 py-2 rounded-full border border-slate-800">
+                <i class="fa-solid fa-key text-cyber-yellow"></i>
+                <span>入群验证暗号：<strong class="text-white">“今天我也AP了”</strong>（秒过审核）</span>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-8 text-center text-xs text-slate-500 border-t border-slate-900 relative z-10">
+        <p>© 2026 鲁东大学音乐游戏综合交流 · 官方B站: <a href="https://b23.tv/BHHnrVG" target="_blank" class="text-pink-400 hover:underline">b23.tv/BHHnrVG</a></p>
+    </footer>
+
+    <!-- Post Modal -->
+    <div id="postModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden p-4">
+        <div class="bg-cyber-card border border-cyber-pink/60 rounded-3xl p-6 sm:p-8 max-w-lg w-full relative shadow-2xl">
+            <button onclick="closePostModal()" class="absolute top-5 right-5 text-slate-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-cyber-pink/20 text-cyber-pink flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-fire"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-white">发布群友高光 / 优秀成绩</h3>
+                    <p class="text-xs text-slate-400">无需繁琐注册，填写昵称即可实时同步至全站高光墙</p>
+                </div>
+            </div>
+
+            <form onsubmit="submitHighlightPost(event)" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5">你的昵称 (CN)</label>
+                        <input type="text" id="post-author" required maxlength="18" placeholder="如：鲁大音游人" class="w-full bg-cyber-dark border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-pink">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5">主力音游</label>
+                        <select id="post-game" class="w-full bg-cyber-dark border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-pink">
+                            <option value="Arcaea">Arcaea</option>
+                            <option value="Phigros">Phigros</option>
+                            <option value="Maimai DX">舞萌 Maimai DX</option>
+                            <option value="PJSK 世界计划">PJSK 世界计划</option>
+                            <option value="Chunithm 中二">Chunithm 中二</option>
+                            <option value="osu! / PC音游">osu! / PC音游</option>
+                            <option value="全栖多修玩家">全栖多修玩家</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5">段位/战力（选填）</label>
+                        <input type="text" id="post-rating" maxlength="16" placeholder="如：RKS 15.8 / 万五" class="w-full bg-cyber-dark border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-pink">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5">动态分类</label>
+                        <select id="post-category" class="w-full bg-cyber-dark border border-slate-700 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-cyber-pink">
+                            <option value="团建风采">🎊 团建风采</option>
+                            <option value="出勤日常">📸 出勤日常</option>
+                            <option value="个人高光成绩">🏆 个人高光成绩</option>
+                            <option value="萌新求带">🤝 扩列 / 萌新求带</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5">判定徽章 / 状态标</label>
+                        <select id="post-badge" class="w-full bg-cyber-dark border border-slate-700 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-cyber-pink">
+                            <option value="团建合照">🎊 团建合照</option>
+                            <option value="线下出勤">📸 线下出勤</option>
+                            <option value="ALL PERFECT">✨ ALL PERFECT (AP)</option>
+                            <option value="MAX 理论值">🌈 MAX 理论值</option>
+                            <option value="FULL COMBO">💎 FULL COMBO (FC)</option>
+                            <option value="个人高光">🏆 个人高光成绩</option>
+                            <option value="滴人扩列">🎉 滴人扩列</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5">关联曲目或地点标签（选填）</label>
+                        <input type="text" id="post-song" maxlength="35" placeholder="如：烟台大悦城机厅 / Testify [BYD]" class="w-full bg-cyber-dark border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-pink">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5">配图链接 URL（选填，晒合照/成绩图）</label>
+                        <input type="url" id="post-image" placeholder="https://... 输入图片直链地址" class="w-full bg-cyber-dark border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-pink">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">日常分享 / 感言内容</label>
+                    <textarea id="post-content" required rows="3" maxlength="220" placeholder="写下你们的线下聚会趣事、机厅出勤偶遇、推分心路历程..." class="w-full bg-cyber-dark border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyber-pink resize-none"></textarea>
+                </div>
+
+                <button type="submit" id="post-submit-btn" class="w-full bg-gradient-to-r from-cyber-pink to-cyber-purple hover:opacity-95 text-white font-black py-3.5 rounded-xl shadow-lg transition-all">
+                    立即上墙展示
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div id="lightboxModal" onclick="closeLightbox()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md hidden p-4 cursor-zoom-out">
+        <div class="max-w-4xl w-full bg-cyber-card border border-slate-700 rounded-3xl overflow-hidden shadow-2xl relative" onclick="event.stopPropagation()">
+            <button onclick="closeLightbox()" class="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/70 hover:bg-cyber-pink text-white flex items-center justify-center text-lg transition-colors">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="bg-black flex items-center justify-center max-h-[70vh] overflow-hidden">
+                <img id="lightbox-img" src="" alt="预览大图" class="w-full h-auto max-h-[70vh] object-contain">
+            </div>
+            <div class="p-5 sm:p-6 bg-cyber-card">
+                <h4 id="lightbox-title" class="text-lg sm:text-xl font-black text-white mb-1">照片标题</h4>
+                <p id="lightbox-desc" class="text-xs sm:text-sm text-slate-300">照片描述内容</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allHighlights = [];
+        let currentFilter = 'ALL';
+        let likedPostIds = new Set();
+
+        const starterHighlights = [
+            {
+                id: 'seed-photo-1',
+                author: '舞萌出勤小分队',
+                game: 'Maimai DX',
+                rating: '万五车队',
+                title: '周末机厅常驻代表',
+                category: '团建风采',
+                badge: '团建合照',
+                song: '📍 烟台大悦城机厅 · 周六下午拼机',
+                imageUrl: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80',
+                content: '周六下午群里喊了一嗓子，结果机厅直接被咱们鲁大群友包围了！6个人轮流拼机刷分，旁边路人都看呆了，团建氛围拉满！',
+                likes: 86,
+                isSeed: true
+            },
+            {
+                id: 'seed-photo-2',
+                author: '校内面基组委会',
+                game: '全栖多修玩家',
+                rating: '社团聚会',
+                title: '鲁大音游群管理组',
+                category: '团建风采',
+                badge: '团建合照',
+                song: '📍 鲁大校园活动室 · 迎新团建大会',
+                imageUrl: 'https://images.unsplash.com/photo-1561489413-985b06da5bee?auto=format&fit=crop&w=800&q=80',
+                content: '新学期第一次线下迎新团建！大家带着各自的iPad、手台和笔记本聚在一起切磋拆谱，晚上还一起去吃了烤肉，欢迎更多新同学加入大家庭！',
+                likes: 92,
+                isSeed: true
+            },
+            {
+                id: 'seed-1',
+                author: 'Arcaea魔王喵',
+                game: 'Arcaea',
+                rating: 'PTT 12.92',
+                title: '鲁大音游群同好',
+                category: '个人高光成绩',
+                badge: 'MAX 理论值',
+                song: 'Testify [BYD 12] · 理论值达成',
+                content: '本来只是想进群问个隐藏曲怎么解锁，结果不仅拿到了全套手元慢放攻略，还顺便找到了三个凌晨两点一起打联机的固定队友！',
+                likes: 48,
+                isSeed: true
+            },
+            {
+                id: 'seed-2',
+                author: 'Phigros零失误使者',
+                game: 'Phigros',
+                rating: 'RKS 16.15',
+                title: '理论值收割机',
+                category: '个人高光成绩',
+                badge: 'ALL PERFECT',
+                song: 'Rrhar\'il [AT 16] · 1000000',
+                imageUrl: 'https://images.unsplash.com/photo-1614680376593-902f749f7ffc?auto=format&fit=crop&w=800&q=80',
+                content: '在自习室休息时跟群友连麦打歌，受群友玄学Buff加持，把屏幕擦了三遍重开一把居然当场AP推分成功！',
+                likes: 64,
+                isSeed: true
+            },
+            {
+                id: 'seed-3',
+                author: '中二抬手运动员',
+                game: 'Chunithm 中二',
+                rating: 'Rating 16.35',
+                title: '周末机厅拼机常客',
+                category: '出勤日常',
+                badge: '线下出勤',
+                song: '周末机厅拼机 & 萌新带教',
+                content: '群里前辈超级亲切！第一次去机厅不敢上机，还是群里学长主动借我手套、教我怎么刷卡和看判定，哪怕打 Basic 也有人鼓掌，强烈推荐加入！',
+                likes: 53,
+                isSeed: true
+            },
+            {
+                id: 'seed-4',
+                author: 'osu!推分达人',
+                game: 'osu! / PC音游',
+                rating: '4 Digit',
+                title: '北区宿舍键盘侠',
+                category: '个人高光成绩',
+                badge: '个人高光',
+                song: '深夜 MP 联机房全连高分',
+                content: '昨晚宿舍开黑打 osu! 多人房，室友听见我们四个人的磁轴键盘敲得像暴雨梨花针一样，今天成功拿下个人 PB！',
+                likes: 71,
+                isSeed: true
+            }
+        ];
+
+        function showToast(title, msg, iconClass = 'fa-solid fa-bolt') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-title').innerText = title;
+            document.getElementById('toast-msg').innerText = msg;
+            document.getElementById('toast-icon').className = `${iconClass} text-lg`;
+            toast.classList.remove('translate-x-[150%]');
+            setTimeout(() => {
+                toast.classList.add('translate-x-[150%]');
+            }, 3200);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, s => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[s]));
+        }
+
+        window.onUserReady = async function(user) {
+            const { db, appId, collection, query, onSnapshot } = window.fb;
+            const highlightsRef = collection(db, 'artifacts', appId, 'public', 'data', 'rhythm_highlights');
+            const q = query(highlightsRef);
+
+            onSnapshot(q, (snapshot) => {
+                const cloudItems = [];
+                snapshot.forEach((docSnap) => {
+                    cloudItems.push({
+                        id: docSnap.id,
+                        ...docSnap.data(),
+                        isSeed: false
+                    });
+                });
+
+                cloudItems.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                allHighlights = [...cloudItems, ...starterHighlights];
+                renderHighlightsGrid();
+            }, (error) => {
+                console.error("Highlights snapshot error:", error);
+                allHighlights = [...starterHighlights];
+                renderHighlightsGrid();
+            });
+        };
+
+        function getBadgeStyle(badgeText) {
+            if (badgeText.includes('MAX')) return 'badge-max';
+            if (badgeText.includes('PERFECT') || badgeText.includes('AP')) return 'badge-ap';
+            if (badgeText.includes('COMBO') || badgeText.includes('FC')) return 'badge-fc';
+            return 'badge-quote';
+        }
+
+        function renderHighlightsGrid() {
+            const grid = document.getElementById('highlights-grid');
+            const filtered = currentFilter === 'ALL'
+                ? allHighlights
+                : allHighlights.filter(item => item.category === currentFilter);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-cyber-card border border-slate-800 rounded-3xl p-12 text-center">
+                        <i class="fa-solid fa-compact-disc text-4xl text-cyber-cyan mb-3 animate-spin"></i>
+                        <h4 class="text-lg font-bold text-white">该分区暂时还没有动态哦</h4>
+                        <p class="text-xs text-slate-400 mt-1 mb-5">快来抢占沙发，发布第一条高光战绩或金句吧！</p>
+                        <button onclick="openPostModal()" class="bg-cyber-cyan text-black font-extrabold px-5 py-2.5 rounded-xl text-xs">立即发布</button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map((item) => {
+                const initial = (item.author || '音').charAt(0).toUpperCase();
+                const badgeClass = getBadgeStyle(item.badge || '神仙金句');
+                const likesCount = Number(item.likes || 0);
+                const isLiked = likedPostIds.has(item.id);
+                const isOwner = window.currentUser && item.uid === window.currentUser.uid;
+
+                return `
+                <div class="bg-cyber-card hover:bg-[#1d2238] border ${item.isSeed ? 'border-slate-800' : 'border-cyber-cyan/40'} rounded-3xl p-6 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 shadow-xl relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyber-cyan via-cyber-purple to-cyber-pink opacity-75"></div>
+
+                    <div>
+                        <div class="flex items-center justify-between gap-2 mb-4">
+                            <span class="px-2.5 py-1 rounded-lg bg-cyber-dark border border-slate-700/80 text-[11px] font-mono-num font-bold text-cyber-cyan flex items-center gap-1.5">
+                                <i class="fa-solid fa-gamepad text-[10px]"></i>
+                                <span>${escapeHtml(item.game || '全能音游')}</span>
+                            </span>
+                            <span class="px-2.5 py-0.5 rounded-md text-[10px] font-mono-num font-black tracking-wider uppercase shadow-sm ${badgeClass}">
+                                ${escapeHtml(item.badge || '神仙金句')}
+                            </span>
+                        </div>
+
+                        ${item.song ? `
+                        <div class="mb-3 inline-flex items-center space-x-1.5 bg-cyber-dark/70 border border-slate-800 px-3 py-1 rounded-lg text-xs text-slate-300 font-mono-num max-w-full truncate">
+                            <i class="fa-solid fa-location-dot text-cyber-pink text-[10px]"></i>
+                            <span class="truncate">${escapeHtml(item.song)}</span>
+                        </div>
+                        ` : ''}
+
+                        ${item.imageUrl ? `
+                        <div onclick="openLightbox('${escapeHtml(item.imageUrl)}', '${escapeHtml(item.song || item.author)}', '${escapeHtml(item.content)}')" class="mb-4 rounded-2xl overflow-hidden border border-slate-800 h-44 relative cursor-pointer group/img">
+                            <img src="${escapeHtml(item.imageUrl)}" onerror="this.parentElement.style.display='none'" alt="群友日常配图" class="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500">
+                            <div class="absolute bottom-2 right-2 bg-black/70 backdrop-blur-md text-white text-[10px] px-2.5 py-1 rounded-lg flex items-center gap-1">
+                                <i class="fa-solid fa-magnifying-glass-plus text-cyber-cyan"></i> 点击放大
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <div class="relative mb-6">
+                            <p class="text-slate-200 text-sm leading-relaxed font-normal">
+                                ${escapeHtml(item.content)}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-800/90 flex items-center justify-between gap-2">
+                        <div class="flex items-center space-x-3 min-w-0">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyber-cyan/20 to-cyber-pink/20 border border-cyber-cyan/30 text-cyber-cyan flex items-center justify-center font-black text-sm shrink-0">
+                                ${escapeHtml(initial)}
+                            </div>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-white text-sm font-extrabold truncate">${escapeHtml(item.author)}</span>
+                                    ${item.rating ? `<span class="text-[10px] font-mono-num px-1.5 py-0.5 rounded bg-slate-800 text-cyber-yellow shrink-0">${escapeHtml(item.rating)}</span>` : ''}
+                                </div>
+                                <div class="text-[11px] text-slate-400 truncate">${escapeHtml(item.title || '群内活跃同好')}</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            ${isOwner && !item.isSeed ? `
+                            <button onclick="deleteHighlight('${item.id}')" title="删除该动态" class="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-red-500/20 text-slate-400 hover:text-red-400 flex items-center justify-center text-xs transition-colors">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                            ` : ''}
+                            <button onclick="likeHighlight('${item.id}', ${item.isSeed}, ${likesCount})" class="px-3 py-1.5 rounded-xl border ${isLiked ? 'bg-cyber-pink/20 border-cyber-pink text-cyber-pink' : 'bg-cyber-dark/80 border-slate-800 text-slate-300 hover:border-cyber-pink/50 hover:text-white'} flex items-center space-x-1.5 text-xs font-mono-num font-bold transition-all">
+                                <i class="fa-solid fa-heart ${isLiked ? 'text-cyber-pink scale-110' : 'text-slate-400'} transition-transform"></i>
+                                <span>${likesCount}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function setHighlightFilter(category) {
+            currentFilter = category;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.getAttribute('data-filter') === category) {
+                    btn.className = 'filter-btn px-4 py-2 rounded-xl text-xs font-extrabold transition-all bg-cyber-cyan text-black shadow-md';
+                } else {
+                    btn.className = 'filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-cyber-card text-slate-300 hover:text-white border border-slate-800';
+                }
+            });
+            renderHighlightsGrid();
+        }
+
+        async function submitHighlightPost(event) {
+            event.preventDefault();
+            if (!window.currentUser) return;
+
+            const author = document.getElementById('post-author').value.trim() || '鲁大神秘音游人';
+            const game = document.getElementById('post-game').value;
+            const rating = document.getElementById('post-rating').value.trim();
+            const category = document.getElementById('post-category').value;
+            const badge = document.getElementById('post-badge').value;
+            const song = document.getElementById('post-song').value.trim();
+            const imageUrl = document.getElementById('post-image').value.trim();
+            const content = document.getElementById('post-content').value.trim();
+            const btn = document.getElementById('post-submit-btn');
+
+            if (!content) return;
+            btn.disabled = true;
+            btn.innerText = '正在上传至高光墙...';
+
+            try {
+                const { db, appId, collection, addDoc } = window.fb;
+                const highlightsRef = collection(db, 'artifacts', appId, 'public', 'data', 'rhythm_highlights');
+
+                await addDoc(highlightsRef, {
+                    uid: window.currentUser.uid,
+                    author,
+                    game,
+                    rating,
+                    title: '鲁大音游群同好',
+                    category,
+                    badge,
+                    song,
+                    imageUrl,
+                    content,
+                    likes: 1,
+                    createdAt: Date.now()
+                });
+
+                document.getElementById('post-song').value = '';
+                document.getElementById('post-image').value = '';
+                document.getElementById('post-content').value = '';
+                closePostModal();
+                showToast('上墙成功！', '你的日常与高光动态已实时展示给所有群友！', 'fa-solid fa-fire');
+            } catch (err) {
+                console.error("Error adding highlight:", err);
+                showToast('发布失败', '请检查网络连接后重试', 'fa-solid fa-triangle-exclamation');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = '立即上墙展示';
+            }
+        }
+
+        async function likeHighlight(id, isSeed, currentLikes) {
+            if (!window.currentUser) return;
+            if (likedPostIds.has(id)) {
+                showToast('已膜拜过啦', '你已经为这位群友点过赞了哦~', 'fa-solid fa-heart');
+                return;
+            }
+            likedPostIds.add(id);
+
+            if (isSeed) {
+                const target = starterHighlights.find(item => item.id === id);
+                if (target) target.likes += 1;
+                renderHighlightsGrid();
+                showToast('打Call成功！', '群友收到了你的膝盖 (+1)', 'fa-solid fa-heart');
+                return;
+            }
+
+            try {
+                const { db, appId, doc, updateDoc } = window.fb;
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'rhythm_highlights', id);
+                await updateDoc(docRef, {
+                    likes: currentLikes + 1
+                });
+                showToast('打Call成功！', '数据已同步至云端 (+1)', 'fa-solid fa-heart');
+            } catch (e) {
+                console.error("Like error:", e);
+            }
+        }
+
+        async function deleteHighlight(id) {
+            if (!window.currentUser) return;
+            try {
+                const { db, appId, doc, deleteDoc } = window.fb;
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'rhythm_highlights', id);
+                await deleteDoc(docRef);
+                showToast('已删除', '该条动态已从云端移除', 'fa-solid fa-trash-can');
+            } catch (e) {
+                console.error("Delete error:", e);
+            }
+        }
+
+        function openPostModal() {
+            document.getElementById('postModal').classList.remove('hidden');
+        }
+        function closePostModal() {
+            document.getElementById('postModal').classList.add('hidden');
+        }
+
+        function openLightbox(imgSrc, title, desc) {
+            document.getElementById('lightbox-img').src = imgSrc;
+            document.getElementById('lightbox-title').innerText = title || '鲁东大学音乐游戏群线下日常';
+            document.getElementById('lightbox-desc').innerText = desc || '';
+            document.getElementById('lightboxModal').classList.remove('hidden');
+        }
+        function closeLightbox() {
+            document.getElementById('lightboxModal').classList.add('hidden');
+        }
+
+        function copyGroupCode(code) {
+            const temp = document.createElement('textarea');
+            temp.value = code;
+            temp.style.position = 'fixed';
+            document.body.appendChild(temp);
+            temp.select();
+            try {
+                document.execCommand('copy');
+                showToast('群号已复制！', `QQ群号 ${code} 已复制，快去添加吧！`, 'fa-solid fa-check');
+            } catch (e) {
+                showToast('复制提示', `请手动复制群号：${code}`);
+            }
+            document.body.removeChild(temp);
+        }
+
+        allHighlights = [...starterHighlights];
+        renderHighlightsGrid();
+
+        const canvas = document.getElementById('rhythmCanvas');
+        const ctx = canvas.getContext('2d');
+        let cw, ch;
+        const notes = [];
+
+        function resizeBg() {
+            cw = canvas.width = window.innerWidth;
+            ch = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeBg);
+        resizeBg();
+
+        class RhythmNote {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * cw;
+                this.y = ch + Math.random() * 200;
+                this.width = Math.random() * 28 + 12;
+                this.height = 5;
+                this.speed = Math.random() * 1.4 + 0.5;
+                this.color = Math.random() > 0.5 ? '#05d9e8' : '#ff2a85';
+                this.alpha = Math.random() * 0.45 + 0.15;
+            }
+            update() {
+                this.y -= this.speed;
+                if (this.y < -20) this.reset();
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.restore();
+            }
+        }
+
+        for (let i = 0; i < 36; i++) notes.push(new RhythmNote());
+
+        function animateBg() {
+            ctx.clearRect(0, 0, cw, ch);
+            notes.forEach(n => { n.update(); n.draw(); });
+            requestAnimationFrame(animateBg);
+        }
+        window.onload = function() {
+            animateBg();
+        };
+    </script>
+</body>
+</html>
